@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux Infrastructure API Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #f8fafc;
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 16px;
+            border: 1px solid #475569;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+
+        .test-section {
+            background: #1e293b;
+            padding: 24px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+
+        .test-section:hover {
+            border-left-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .test-section h2 {
+            color: #e2e8f0;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+
+        .test-section p {
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .result {
+            background: #0f172a;
+            padding: 20px;
+            margin-top: 16px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            white-space: pre-wrap;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .result::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .result::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .result::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        .success { 
+            border-left: 4px solid #10b981; 
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        .error { 
+            border-left: 4px solid #ef4444; 
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .loading { 
+            color: #fbbf24; 
+            border-left: 4px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .status-card {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+
+        .status-card.success {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-card.error {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .status-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #475569;
+            border: none;
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Flux Infrastructure API Test</h1>
+        <p>Test your local Flux monitoring APIs. Make sure your backend is running on port 16127.</p>
+    </div>
+
+    <div class="status-grid" id="status-overview">
+        <div class="status-card" id="backend-status">
+            <div class="status-value">●</div>
+            <div class="status-label">Backend</div>
+        </div>
+        <div class="status-card" id="api-status">
+            <div class="status-value">●</div>
+            <div class="status-label">APIs</div>
+        </div>
+        <div class="status-card" id="flux-status">
+            <div class="status-value">●</div>
+            <div class="status-label">Flux Network</div>
+        </div>
+        <div class="status-card" id="response-time">
+            <div class="status-value">-</div>
+            <div class="status-label">Avg Response</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 1. Backend Health Check</h2>
+        <p>Test basic backend connectivity and health status.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testHealth()">
+                <span class="spinner" id="health-spinner" style="display: none;"></span>
+                Test Health
+            </button>
+            <button class="btn-primary" onclick="testFluxHealth()">
+                <span class="spinner" id="flux-health-spinner" style="display: none;"></span>
+                Test Flux Health
+            </button>
+        </div>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🤖 2. AI Services Monitoring</h2>
+        <p>Test your Flux AI integration, account balance, and available models.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testAI()">
+                <span class="spinner" id="ai-spinner" style="display: none;"></span>
+                Test AI Status
+            </button>
+        </div>
+        <div id="ai-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 3. Node Network Monitoring</h2>
+        <p>Test live Flux node network data and infrastructure metrics.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testNodes()">
+                <span class="spinner" id="nodes-spinner" style="display: none;"></span>
+                Test Node Network
+            </button>
+        </div>
+        <div id="nodes-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>⚡ 4. Edge Computing Services</h2>
+        <p>Test FluxOS applications and edge computing performance data.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testEdge()">
+                <span class="spinner" id="edge-spinner" style="display: none;"></span>
+                Test Edge Services
+            </button>
+        </div>
+        <div id="edge-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>💰 5. Blockchain Revenue</h2>
+        <p>Test blockchain transaction data and revenue metrics.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testRevenue()">
+                <span class="spinner" id="revenue-spinner" style="display: none;"></span>
+                Test Revenue Data
+            </button>
+        </div>
+        <div id="revenue-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 6. Your Applications</h2>
+        <p>Test your deployed FluxOS applications monitoring.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testApps()">
+                <span class="spinner" id="apps-spinner" style="display: none;"></span>
+                Test Your Apps
+            </button>
+        </div>
+        <div id="apps-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 7. Infrastructure Overview</h2>
+        <p>Test complete infrastructure status overview.</p>
+        <div class="button-group">
+            <button class="btn-primary" onclick="testOverview()">
+                <span class="spinner" id="overview-spinner" style="display: none;"></span>
+                Test Overview
+            </button>
+        </div>
+        <div id="overview-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 8. Run All Tests</h2>
+        <p>Execute all API tests and get a comprehensive status report.</p>
+        <div class="button-group">
+            <button class="btn-success" onclick="testAll()">
+                <span class="spinner" id="all-spinner" style="display: none;"></span>
+                Run All Tests
+            </button>
+            <button class="btn-warning" onclick="clearResults()">Clear Results</button>
+        </div>
+        <div id="all-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:16127/api/flux-monitoring';
+        const BACKEND_BASE = 'http://localhost:16127/api';
+        
+        let testResults = {
+            passed: 0,
+            total: 0,
+            responseTimes: []
+        };
+
+        async function makeRequest(endpoint, resultId, spinnerPrefix = '', isBackend = false) {
+            const resultDiv = document.getElementById(resultId);
+            const spinnerId = spinnerPrefix ? `${spinnerPrefix}-spinner` : null;
+            const spinner = spinnerId ? document.getElementById(spinnerId) : null;
+            
+            if (spinner) spinner.style.display = 'inline-block';
+            
+            resultDiv.innerHTML = `
+                <button class="copy-btn" onclick="copyResult('${resultId}')">Copy</button>
+                <div style="color: #fbbf24;">🔄 Loading...</div>
+            `;
+            resultDiv.className = 'result loading';
+
+            const startTime = Date.now();
+            const baseUrl = isBackend ? BACKEND_BASE : API_BASE;
+
+            try {
+                console.log(`Testing: ${baseUrl}${endpoint}`);
+                const response = await fetch(`${baseUrl}${endpoint}`);
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+
+                testResults.responseTimes.push(responseTime);
+
+                if (response.ok) {
+                    const formattedData = JSON.stringify(data, null, 2);
+                    resultDiv.innerHTML = `
+                        <button class="copy-btn" onclick="copyResult('${resultId}')">Copy</button>
+                        <div style="color: #10b981; margin-bottom: 8px;">
+                            ✅ Success (${responseTime}ms)
+                        </div>
+                        ${formattedData}
+                    `;
+                    resultDiv.className = 'result success';
+                    testResults.passed++;
+                    console.log(`✅ ${endpoint} success (${responseTime}ms):`, data);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                resultDiv.innerHTML = `
+                    <button class="copy-btn" onclick="copyResult('${resultId}')">Copy</button>
+                    <div style="color: #ef4444; margin-bottom: 8px;">
+                        ❌ Error (${responseTime}ms)
+                    </div>
+                    ${error.message}
+                    
+                    ${error.message.includes('fetch') ? `
+                    
+🔧 Troubleshooting:
+• Make sure backend is running: npm start
+• Check backend port: http://localhost:16127/api/health
+• Verify CORS is enabled
+• Check browser console for details` : ''}
+                `;
+                resultDiv.className = 'result error';
+                console.error(`❌ ${endpoint} failed (${responseTime}ms):`, error);
+            } finally {
+                testResults.total++;
+                if (spinner) spinner.style.display = 'none';
+                updateStatusOverview();
+            }
+        }
+
+        function copyResult(resultId) {
+            const resultDiv = document.getElementById(resultId);
+            const text = resultDiv.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = resultDiv.querySelector('.copy-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 1000);
+            });
+        }
+
+        function updateStatusOverview() {
+            const backendStatus = document.getElementById('backend-status');
+            const apiStatus = document.getElementById('api-status');
+            const fluxStatus = document.getElementById('flux-status');
+            const responseTime = document.getElementById('response-time');
+
+            // Calculate average response time
+            const avgResponseTime = testResults.responseTimes.length > 0 
+                ? Math.round(testResults.responseTimes.reduce((a, b) => a + b, 0) / testResults.responseTimes.length)
+                : 0;
+
+            // Update response time
+            responseTime.querySelector('.status-value').textContent = 
+                avgResponseTime > 0 ? `${avgResponseTime}ms` : '-';
+
+            // Update success rate
+            if (testResults.total > 0) {
+                const successRate = Math.round((testResults.passed / testResults.total) * 100);
+                apiStatus.querySelector('.status-value').textContent = `${successRate}%`;
+                
+                if (successRate >= 80) {
+                    apiStatus.className = 'status-card success';
+                } else {
+                    apiStatus.className = 'status-card error';
+                }
+            }
+        }
+
+        // Individual test functions
+        function testHealth() {
+            makeRequest('/health', 'health-result', 'health', true);
+        }
+
+        function testFluxHealth() {
+            makeRequest('/health', 'health-result', 'flux-health');
+        }
+
+        function testAI() {
+            makeRequest('/ai-status', 'ai-result', 'ai');
+        }
+
+        function testNodes() {
+            makeRequest('/node-network', 'nodes-result', 'nodes');
+        }
+
+        function testEdge() {
+            makeRequest('/edge-computing', 'edge-result', 'edge');
+        }
+
+        function testRevenue() {
+            makeRequest('/blockchain-revenue', 'revenue-result', 'revenue');
+        }
+
+        function testApps() {
+            makeRequest('/your-applications', 'apps-result', 'apps');
+        }
+
+        function testOverview() {
+            makeRequest('/infrastructure-overview', 'overview-result', 'overview');
+        }
+
+        async function testAll() {
+            const allResult = document.getElementById('all-result');
+            const spinner = document.getElementById('all-spinner');
+            
+            spinner.style.display = 'inline-block';
+            allResult.innerHTML = `
+                <button class="copy-btn" onclick="copyResult('all-result')">Copy</button>
+                <div style="color: #fbbf24;">🔄 Running all tests...</div>
+            `;
+            allResult.className = 'result loading';
+
+            // Reset test results
+            testResults = { passed: 0, total: 0, responseTimes: [] };
+
+            const tests = [
+                { name: 'Backend Health', endpoint: '/health', isBackend: true },
+                { name: 'Flux Health', endpoint: '/health', isBackend: false },
+                { name: 'AI Status', endpoint: '/ai-status' },
+                { name: 'Node Network', endpoint: '/node-network' },
+                { name: 'Edge Computing', endpoint: '/edge-computing' },
+                { name: 'Revenue', endpoint: '/blockchain-revenue' },
+                { name: 'Your Apps', endpoint: '/your-applications' },
+                { name: 'Overview', endpoint: '/infrastructure-overview' }
+            ];
+
+            let results = [];
+            let passCount = 0;
+
+            for (const test of tests) {
+                try {
+                    const startTime = Date.now();
+                    const baseUrl = test.isBackend ? BACKEND_BASE : API_BASE;
+                    const response = await fetch(`${baseUrl}${test.endpoint}`);
+                    const data = await response.json();
+                    const responseTime = Date.now() - startTime;
+                    
+                    if (response.ok) {
+                        results.push(`✅ ${test.name}: SUCCESS (${responseTime}ms)`);
+                        passCount++;
+                    } else {
+                        results.push(`❌ ${test.name}: FAILED - ${data.error} (${responseTime}ms)`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${test.name}: ERROR - ${error.message}`);
+                }
+            }
+
+            const summary = `
+🎯 TEST SUMMARY
+===============
+✅ Passed: ${passCount}/${tests.length} tests
+📊 Success Rate: ${Math.round((passCount / tests.length) * 100)}%
+🕒 Total Time: ${Date.now() - Date.now()}ms
+
+📋 DETAILED RESULTS
+==================`;
+
+            allResult.innerHTML = `
+                <button class="copy-btn" onclick="copyResult('all-result')">Copy</button>
+                ${summary}
+                
+${results.join('\n')}
+
+${passCount === tests.length ? `
+🎉 ALL TESTS PASSED!
+Your Flux Infrastructure Cockpit is ready to use.
+
+🚀 Next Steps:
+• Open the React app: http://localhost:3000/flux-monitoring
+• Configure your Flux AI API key in the AI Services tab
+• Explore real-time data across all infrastructure components
+` : `
+⚠️  SOME TESTS FAILED
+Please check the individual test results above.
+
+🔧 Common Issues:
+• Backend not running: cd backend && npm start
+• Port conflicts: Change PORT in your .env file
+• CORS errors: Check server.js CORS configuration
+• Network timeouts: Flux APIs may be slow, this is normal
+`}
+            `;
+
+            allResult.className = passCount === tests.length ? 'result success' : 'result error';
+            spinner.style.display = 'none';
+        }
+
+        function clearResults() {
+            const resultDivs = document.querySelectorAll('.result');
+            resultDivs.forEach(div => {
+                div.textContent = '';
+                div.className = 'result';
+            });
+            
+            testResults = { passed: 0, total: 0, responseTimes: [] };
+            updateStatusOverview();
+        }
+
+        // Initialize page
+        window.addEventListener('load', () => {
+            console.log('🚀 Flux API Test Page Loaded');
+            
+            // Update backend status indicator
+            const backendStatus = document.getElementById('backend-status');
+            backendStatus.querySelector('.status-value').textContent = '●';
+            backendStatus.className = 'status-card success';
+            
+            // Auto-test health on page load
+            setTimeout(() => {
+                testHealth();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
