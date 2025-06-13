@@ -1,0 +1,134 @@
+<div class="config-section">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <i class="fas fa-key" style="color: var(--flux-primary);"></i>
+        <span style="font-weight: 600;">Flux AI Configuration</span>
+    </div>
+    <input
+        type="password"
+        class="config-input"
+        placeholder="Enter your Flux AI API Key (fal_xxxx...)"
+        id="api-key-input"
+    />
+    <button class="refresh-btn" onclick="testApiConnection()">
+        <span class="spinner" id="api-test-spinner" style="display: none;"></span>
+        <i class="fas fa-plug"></i>
+        Test Connection
+    </button>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                AI Services Monitor
+            </div>
+            <div class="card-status">
+                <div class="status-dot"></div>
+                <span id="ai-status-text">Ready</span>
+            </div>
+        </div>
+
+        <div class="alert alert-warning" id="api-config-alert">
+            <i class="fas fa-info-circle"></i>
+            Configure your API key above to access live AI service data
+        </div>
+
+        <div style="font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+            Available Models
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Status</th>
+                    <th>Latency</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
+                        flux-pro
+                    </td>
+                    <td><span class="status-badge status-operational">operational</span></td>
+                    <td>~2s</td>
+                </tr>
+                <tr>
+                    <td>
+                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
+                        flux-dev
+                    </td>
+                    <td><span class="status-badge status-operational">operational</span></td>
+                    <td>~1.5s</td>
+                </tr>
+                <tr>
+                    <td>
+                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
+                        flux-schnell
+                    </td>
+                    <td><span class="status-badge status-operational">operational</span></td>
+                    <td>~1s</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-card-value">99.8%</div>
+                <div class="metric-card-label">API Uptime</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-value">1.2s</div>
+                <div class="metric-card-label">Avg Response</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                Usage Analytics
+            </div>
+            <button class="refresh-btn" onclick="refreshAiData()">
+                <span class="spinner" id="ai-refresh-spinner" style="display: none;"></span>
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-card-value" id="account-balance">$127.45</div>
+                <div class="metric-card-label">Account Balance</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-value" id="requests-today">247</div>
+                <div class="metric-card-label">Requests Today</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Daily Quota Usage</span>
+                <span class="progress-value" id="quota-percentage">67%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 67%;" id="quota-bar"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 6px; text-align: center;">
+            <div style="font-size: 24px; color: var(--text-muted); margin-bottom: 6px;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <small style="color: var(--text-muted);">API Usage Chart</small>
+        </div>
+    </div>
+</div>

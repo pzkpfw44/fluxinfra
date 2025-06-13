@@ -1,0 +1,110 @@
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                FluxNode Network
+            </div>
+            <button class="refresh-btn" onclick="refreshNodeData()">
+                <span class="spinner" id="node-refresh-spinner" style="display: none;"></span>
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-card-value" id="infra-total-nodes">13,547</div>
+                <div class="metric-card-label">Total FluxNodes</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-value" id="infra-active-nodes">13,521</div>
+                <div class="metric-card-label">Active FluxNodes</div>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Node Type</th>
+                    <th>Count</th>
+                    <th>Collateral</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <i class="fas fa-server" style="color: var(--flux-primary); margin-right: 6px;"></i>
+                        Cumulus
+                    </td>
+                    <td id="cumulus-count">8,247</td>
+                    <td>1,000 FLUX</td>
+                </tr>
+                <tr>
+                    <td>
+                        <i class="fas fa-server" style="color: var(--flux-accent); margin-right: 6px;"></i>
+                        Nimbus
+                    </td>
+                    <td id="nimbus-count">3,892</td>
+                    <td>12,500 FLUX</td>
+                </tr>
+                <tr>
+                    <td>
+                        <i class="fas fa-server" style="color: var(--flux-secondary); margin-right: 6px;"></i>
+                        Stratus
+                    </td>
+                    <td id="stratus-count">1,408</td>
+                    <td>40,000 FLUX</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                Network Resources
+            </div>
+            <div class="card-status">
+                <div class="status-dot"></div>
+                Healthy
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-microchip"></i>CPU Cores
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="cpu-cores">107,238</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-memory"></i>Total RAM
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="total-ram">271 TB</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-database"></i>Total Storage
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="total-storage">7.2 PB</span>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Network Utilization</span>
+                <span class="progress-value" id="network-utilization">73%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 73%;" id="utilization-bar"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                FluxOS Applications
+            </div>
+            <button class="refresh-btn" onclick="refreshEdgeData()">
+                <span class="spinner" id="edge-refresh-spinner" style="display: none;"></span>
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-card-value" id="total-apps">2,847</div>
+                <div class="metric-card-label">Active Applications</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-card-value" id="total-instances">18,293</div>
+                <div class="metric-card-label">Running Instances</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">CPU Utilization</span>
+                <span class="progress-value" id="edge-cpu">67%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 67%;" id="edge-cpu-bar"></div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Memory Usage</span>
+                <span class="progress-value" id="edge-memory">54%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 54%;" id="edge-memory-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                Performance Metrics
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-clock"></i>Avg Response Time
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="avg-response">127ms</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-exchange-alt"></i>Throughput
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="throughput">15,847 req/s</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-exclamation-triangle"></i>Error Rate
+                </span>
+                <span style="color: var(--flux-success); font-weight: 600; font-size: 13px;" id="error-rate">0.03%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary); display: flex; align-items: center; gap: 6px; font-size: 13px;">
+                    <i class="fas fa-chart-area"></i>Data Processed
+                </span>
+                <span style="color: var(--text-primary); font-weight: 600; font-size: 13px;" id="data-processed">1.2 TB/day</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 6px; text-align: center;">
+            <div style="font-size: 24px; color: var(--text-muted); margin-bottom: 6px;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <small style="color: var(--text-muted);">Performance Chart</small>
+        </div>
+    </div>
+</div>
