@@ -1,134 +1,806 @@
-<div class="config-section">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-        <i class="fas fa-key" style="color: var(--flux-primary);"></i>
-        <span style="font-weight: 600;">Flux AI Configuration</span>
-    </div>
-    <input
-        type="password"
-        class="config-input"
-        placeholder="Enter your Flux AI API Key (fal_xxxx...)"
-        id="api-key-input"
-    />
-    <button class="refresh-btn" onclick="testApiConnection()">
-        <span class="spinner" id="api-test-spinner" style="display: none;"></span>
-        <i class="fas fa-plug"></i>
-        Test Connection
-    </button>
-</div>
-
-<div class="dashboard-grid">
-    <div class="dashboard-card">
-        <div class="card-header">
-            <div class="card-title">
-                <div class="card-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                AI Services Monitor
-            </div>
-            <div class="card-status">
-                <div class="status-dot"></div>
-                <span id="ai-status-text">Ready</span>
-            </div>
+<!-- FluxAI Services Tab Content -->
+<div class="tab-content active">
+    <div class="config-section">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <i class="fas fa-exclamation-triangle" style="color: var(--flux-warning);"></i>
+            <span style="font-weight: 600;">FluxAI API Configuration</span>
         </div>
-
         <div class="alert alert-warning" id="api-config-alert">
             <i class="fas fa-info-circle"></i>
-            Configure your API key above to access live AI service data
+            Configure FluxAI API key for live data
         </div>
-
-        <div style="font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-            Available Models
-        </div>
-
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Model</th>
-                    <th>Status</th>
-                    <th>Latency</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
-                        flux-pro
-                    </td>
-                    <td><span class="status-badge status-operational">operational</span></td>
-                    <td>~2s</td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
-                        flux-dev
-                    </td>
-                    <td><span class="status-badge status-operational">operational</span></td>
-                    <td>~1.5s</td>
-                </tr>
-                <tr>
-                    <td>
-                        <i class="fas fa-circle" style="color: var(--flux-success); font-size: 6px; margin-right: 6px;"></i>
-                        flux-schnell
-                    </td>
-                    <td><span class="status-badge status-operational">operational</span></td>
-                    <td>~1s</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="metric-card-value">99.8%</div>
-                <div class="metric-card-label">API Uptime</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-card-value">1.2s</div>
-                <div class="metric-card-label">Avg Response</div>
-            </div>
-        </div>
+        <input
+            type="password"
+            class="config-input"
+            placeholder="Enter your FluxAI API Key..."
+            id="api-key-input"
+        />
+        <button 
+            class="refresh-btn" 
+            id="api-test-btn"
+        >
+            <span class="spinner" id="api-test-spinner" style="display: none;"></span>
+            <i class="fas fa-plug"></i>
+            Test FluxAI Connection
+        </button>
     </div>
 
-    <div class="dashboard-card">
-        <div class="card-header">
-            <div class="card-title">
-                <div class="card-icon">
-                    <i class="fas fa-chart-bar"></i>
+    <div class="dashboard-grid">
+        <!-- API Health & Services -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    FluxAI API Health
                 </div>
-                Usage Analytics
+                <div class="card-status">
+                    <div class="status-dot"></div>
+                    <span id="api-health-status">Checking...</span>
+                </div>
             </div>
-            <button class="refresh-btn" onclick="refreshAiData()">
+
+            <div style="font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Core Services Status
+            </div>
+
+            <table class="data-table" id="api-health-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Response Time</th>
+                    </tr>
+                </thead>
+                <tbody id="services-list">
+                    <tr>
+                        <td><i class="fas fa-circle" style="color: var(--text-muted); font-size: 8px; margin-right: 8px;"></i>API Status</td>
+                        <td><span class="status-badge">testing</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-circle" style="color: var(--text-muted); font-size: 8px; margin-right: 8px;"></i>Services Catalog</td>
+                        <td><span class="status-badge">testing</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-circle" style="color: var(--text-muted); font-size: 8px; margin-right: 8px;"></i>Network Health</td>
+                        <td><span class="status-badge">testing</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-circle" style="color: var(--text-muted); font-size: 8px; margin-right: 8px;"></i>Usage Monitoring</td>
+                        <td><span class="status-badge">testing</span></td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button 
+                class="refresh-btn" 
+                id="ai-refresh-btn"
+                style="margin-top: 16px;"
+            >
                 <span class="spinner" id="ai-refresh-spinner" style="display: none;"></span>
                 <i class="fas fa-sync-alt"></i>
-                Refresh
+                Refresh All Services
             </button>
         </div>
 
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="metric-card-value" id="account-balance">$127.45</div>
-                <div class="metric-card-label">Account Balance</div>
+        <!-- Available Models & Analytics -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    Available AI Models
+                </div>
+                <div class="card-status">
+                    <div class="status-dot"></div>
+                    <span id="models-status">Loading...</span>
+                </div>
             </div>
-            <div class="metric-card">
-                <div class="metric-card-value" id="requests-today">247</div>
-                <div class="metric-card-label">Requests Today</div>
+
+            <div class="metric-grid" id="models-list">
+                <div class="metric-card">
+                    <div class="metric-card-value">GPT-4</div>
+                    <div class="metric-card-label">Language Model</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">FLUX.1 Pro</div>
+                    <div class="metric-card-label">Image Generation</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">FLUX.1 Dev</div>
+                    <div class="metric-card-label">Image Development</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">FLUX.1 Schnell</div>
+                    <div class="metric-card-label">Fast Generation</div>
+                </div>
+            </div>
+
+            <div style="font-weight: 600; margin: 20px 0 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Usage Analytics
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-card-value" id="account-balance">$127.45</div>
+                    <div class="metric-card-label">Account Balance</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value" id="requests-today">247</div>
+                    <div class="metric-card-label">Requests Today</div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span class="progress-label">Daily Quota Usage</span>
+                    <span class="progress-value" id="quota-percentage">67%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="quota-bar" style="width: 67%;"></div>
+                </div>
             </div>
         </div>
 
-        <div class="progress-container">
-            <div class="progress-header">
-                <span class="progress-label">Daily Quota Usage</span>
-                <span class="progress-value" id="quota-percentage">67%</span>
+        <!-- API Key Management -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    API Key Management
+                </div>
+                <button class="refresh-btn" onclick="loadApiKeys()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 67%;" id="quota-bar"></div>
+
+            <div style="font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Active API Keys
+            </div>
+
+            <div id="api-keys-list">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">
+                    <i class="fas fa-key" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                    Configure API key to view key management
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="createNewApiKey()" style="margin-top: 16px;">
+                <i class="fas fa-plus"></i>
+                Create New Key
+            </button>
+        </div>
+
+        <!-- Pricing & Billing -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    Pricing & Billing
+                </div>
+                <button class="refresh-btn" onclick="loadPricingRates()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+
+            <div style="font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Current Rates
+            </div>
+
+            <table class="data-table" id="pricing-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Rate</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPT-4 Text</td>
+                        <td>$0.03</td>
+                        <td>per 1K tokens</td>
+                    </tr>
+                    <tr>
+                        <td>FLUX.1 Pro</td>
+                        <td>$0.05</td>
+                        <td>per image</td>
+                    </tr>
+                    <tr>
+                        <td>FLUX.1 Dev</td>
+                        <td>$0.025</td>
+                        <td>per image</td>
+                    </tr>
+                    <tr>
+                        <td>Fine-tuning</td>
+                        <td>$3.00</td>
+                        <td>per hour</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="progress-container" style="margin-top: 20px;">
+                <div class="progress-header">
+                    <span class="progress-label">Monthly Spend</span>
+                    <span class="progress-value">$45.67 / $200</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 23%;"></div>
+                </div>
             </div>
         </div>
 
-        <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 6px; text-align: center;">
-            <div style="font-size: 24px; color: var(--text-muted); margin-bottom: 6px;">
-                <i class="fas fa-chart-line"></i>
+        <!-- Container & Deployment Info -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    Deployments & Containers
+                </div>
+                <button class="refresh-btn" onclick="loadContainerInfo()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
             </div>
-            <small style="color: var(--text-muted);">API Usage Chart</small>
+
+            <div style="font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Active Deployments
+            </div>
+
+            <div id="deployments-list">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">
+                    <i class="fas fa-cube" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                    No active deployments found
+                </div>
+            </div>
+
+            <div class="metric-grid" style="margin-top: 20px;">
+                <div class="metric-card">
+                    <div class="metric-card-value">4</div>
+                    <div class="metric-card-label">Available Regions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">99.9%</div>
+                    <div class="metric-card-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fine-tuning & Jobs -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    Fine-tuning Jobs
+                </div>
+                <button class="refresh-btn" onclick="loadFineTuningJobs()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+
+            <div style="font-weight: 600; margin-bottom: 16px; color: var(--text-secondary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Recent Jobs
+            </div>
+
+            <div id="fine-tuning-list">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">
+                    <i class="fas fa-cogs" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                    No fine-tuning jobs found
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="startFineTuning()" style="margin-top: 16px;">
+                <i class="fas fa-play"></i>
+                Start New Job
+            </button>
         </div>
     </div>
 </div>
+
+<script>
+// FluxAI API Configuration
+const FLUXAI_API_CONFIG = {
+    baseUrl: 'https://api.runonflux.com',
+    endpoints: {
+        status: '/status',
+        services: '/services',
+        models: '/services/{service}/models',
+        usage: '/usage',
+        rates: '/rates',
+        ping: '/ping',
+        apiKeys: '/api-keys',
+        containers: '/containers',
+        apps: '/apps',
+        metrics: '/metrics',
+        logs: '/logs',
+        webhooks: '/webhooks',
+        fineTunes: '/fine-tunes'
+    }
+};
+
+// FluxAI API Functions
+async function callFluxAIAPI(endpoint, options = {}) {
+    const apiKey = localStorage.getItem('flux_api_key');
+    if (!apiKey && options.requiresAuth !== false) {
+        throw new Error('API key required');
+    }
+
+    const url = `${FLUXAI_API_CONFIG.baseUrl}${endpoint}`;
+    const config = {
+        method: options.method || 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'FluxCockpit/1.0',
+            ...options.headers
+        },
+        ...options
+    };
+
+    if (apiKey) {
+        config.headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
+    const startTime = Date.now();
+    const response = await fetch(url, config);
+    const responseTime = Date.now() - startTime;
+
+    return {
+        ok: response.ok,
+        status: response.status,
+        data: await response.json(),
+        responseTime
+    };
+}
+
+// Test API Status
+async function testApiStatus() {
+    try {
+        const result = await callFluxAIAPI('/status', { requiresAuth: false });
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            data: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Get Available Services
+async function getAvailableServices() {
+    try {
+        const result = await callFluxAIAPI('/services');
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            services: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Get Available Models
+async function getAvailableModels(serviceName = 'image-generation') {
+    try {
+        const endpoint = `/services/${serviceName}/models`;
+        const result = await callFluxAIAPI(endpoint);
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            models: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Get Usage Data
+async function getUsageData() {
+    try {
+        const result = await callFluxAIAPI('/usage');
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            usage: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Get Network Status
+async function getNetworkStatus() {
+    try {
+        const result = await callFluxAIAPI('/network/status');
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            network: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Ping Service
+async function pingFluxAI(serviceName = 'image-generation') {
+    try {
+        const result = await callFluxAIAPI(`/ping?service=${serviceName}`);
+        return {
+            success: result.ok,
+            responseTime: result.responseTime,
+            ping: result.data
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+// Comprehensive FluxAI Testing
+async function testAllFluxAIServices() {
+    console.log('🧪 Starting comprehensive FluxAI API testing...');
+    
+    const tests = [
+        { name: 'API Status', test: testApiStatus },
+        { name: 'Services Catalog', test: getAvailableServices },
+        { name: 'Network Health', test: getNetworkStatus },
+        { name: 'Usage Monitoring', test: getUsageData }
+    ];
+
+    const results = [];
+    const tbody = document.getElementById('services-list');
+    
+    for (const testItem of tests) {
+        console.log(`Testing ${testItem.name}...`);
+        
+        try {
+            const result = await testItem.test();
+            results.push({
+                name: testItem.name,
+                success: result.success,
+                responseTime: result.responseTime,
+                error: result.error
+            });
+            
+            // Update UI in real-time
+            updateServiceRow(testItem.name, result.success, result.responseTime);
+            
+        } catch (error) {
+            console.error(`Error testing ${testItem.name}:`, error);
+            results.push({
+                name: testItem.name,
+                success: false,
+                error: error.message
+            });
+            updateServiceRow(testItem.name, false, null, error.message);
+        }
+    }
+
+    // Update overall status
+    const successCount = results.filter(r => r.success).length;
+    const healthStatus = document.getElementById('api-health-status');
+    if (successCount === results.length) {
+        healthStatus.textContent = 'Operational';
+        healthStatus.parentElement.style.color = 'var(--flux-success)';
+    } else if (successCount > 0) {
+        healthStatus.textContent = 'Partial';
+        healthStatus.parentElement.style.color = 'var(--flux-warning)';
+    } else {
+        healthStatus.textContent = 'Degraded';
+        healthStatus.parentElement.style.color = 'var(--flux-error)';
+    }
+
+    console.log('✅ FluxAI API testing completed:', results);
+    return results;
+}
+
+function updateServiceRow(serviceName, success, responseTime, error) {
+    const tbody = document.getElementById('services-list');
+    const rows = tbody.querySelectorAll('tr');
+    
+    for (const row of rows) {
+        const firstCell = row.querySelector('td');
+        if (firstCell && firstCell.textContent.includes(serviceName)) {
+            const statusCell = row.children[1];
+            const timeCell = row.children[2];
+            
+            // Update status
+            const badge = statusCell.querySelector('.status-badge');
+            if (success) {
+                badge.className = 'status-badge status-operational';
+                badge.textContent = 'operational';
+                firstCell.querySelector('i').style.color = 'var(--flux-success)';
+            } else {
+                badge.className = 'status-badge';
+                badge.style.background = 'rgba(239, 68, 68, 0.1)';
+                badge.style.color = 'var(--flux-error)';
+                badge.textContent = 'failed';
+                firstCell.querySelector('i').style.color = 'var(--flux-error)';
+            }
+            
+            // Update response time
+            timeCell.textContent = responseTime ? `${responseTime}ms` : (error ? 'Error' : '-');
+            break;
+        }
+    }
+}
+
+// API Key Management Functions
+async function loadApiKeys() {
+    try {
+        const result = await callFluxAIAPI('/api-keys');
+        if (result.ok) {
+            displayApiKeys(result.data);
+        } else {
+            throw new Error('Failed to load API keys');
+        }
+    } catch (error) {
+        console.error('Error loading API keys:', error);
+        const container = document.getElementById('api-keys-list');
+        container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: var(--flux-error); font-size: 14px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                Error loading API keys: ${error.message}
+            </div>
+        `;
+    }
+}
+
+function displayApiKeys(keys) {
+    const container = document.getElementById('api-keys-list');
+    if (!keys || keys.length === 0) {
+        container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">
+                <i class="fas fa-key" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                No API keys found
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    keys.forEach(key => {
+        html += `
+            <div style="padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 8px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">${key.name || 'Unnamed Key'}</div>
+                        <div style="font-family: monospace; font-size: 12px; color: var(--text-muted);">${key.id}</div>
+                    </div>
+                    <button onclick="revokeApiKey('${key.id}')" style="background: var(--flux-error); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                        Revoke
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+async function createNewApiKey() {
+    const name = prompt('Enter a name for the new API key:');
+    if (!name) return;
+
+    try {
+        const result = await callFluxAIAPI('/api-keys', {
+            method: 'POST',
+            body: JSON.stringify({ name })
+        });
+        
+        if (result.ok) {
+            alert('API key created successfully!');
+            loadApiKeys();
+        } else {
+            throw new Error('Failed to create API key');
+        }
+    } catch (error) {
+        alert('Error creating API key: ' + error.message);
+    }
+}
+
+async function revokeApiKey(keyId) {
+    if (!confirm('Are you sure you want to revoke this API key?')) return;
+
+    try {
+        const result = await callFluxAIAPI(`/api-keys/${keyId}`, {
+            method: 'DELETE'
+        });
+        
+        if (result.ok) {
+            alert('API key revoked successfully!');
+            loadApiKeys();
+        } else {
+            throw new Error('Failed to revoke API key');
+        }
+    } catch (error) {
+        alert('Error revoking API key: ' + error.message);
+    }
+}
+
+// Pricing Functions
+async function loadPricingRates() {
+    try {
+        const result = await callFluxAIAPI('/rates');
+        if (result.ok) {
+            displayPricingRates(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading pricing rates:', error);
+    }
+}
+
+function displayPricingRates(rates) {
+    const tbody = document.querySelector('#pricing-table tbody');
+    if (!rates) return;
+
+    let html = '';
+    Object.entries(rates).forEach(([service, rate]) => {
+        html += `
+            <tr>
+                <td>${service}</td>
+                <td>$${rate.price}</td>
+                <td>${rate.unit}</td>
+            </tr>
+        `;
+    });
+    
+    if (html) {
+        tbody.innerHTML = html;
+    }
+}
+
+// Container Functions
+async function loadContainerInfo() {
+    try {
+        const result = await callFluxAIAPI('/containers');
+        if (result.ok) {
+            displayContainerInfo(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading container info:', error);
+    }
+}
+
+function displayContainerInfo(containers) {
+    const container = document.getElementById('deployments-list');
+    if (!containers || containers.length === 0) return;
+
+    let html = '';
+    containers.forEach(cont => {
+        html += `
+            <div style="padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">${cont.name || cont.id}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                    Image: ${cont.image}<br>
+                    Status: ${cont.status}
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Fine-tuning Functions
+async function loadFineTuningJobs() {
+    try {
+        const result = await callFluxAIAPI('/fine-tunes');
+        if (result.ok) {
+            displayFineTuningJobs(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading fine-tuning jobs:', error);
+    }
+}
+
+function displayFineTuningJobs(jobs) {
+    const container = document.getElementById('fine-tuning-list');
+    if (!jobs || jobs.length === 0) return;
+
+    let html = '';
+    jobs.forEach(job => {
+        html += `
+            <div style="padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-primary); border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">${job.model || job.id}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                    Status: ${job.status}<br>
+                    Created: ${new Date(job.created_at).toLocaleDateString()}
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+async function startFineTuning() {
+    alert('Fine-tuning job creation would be implemented here');
+}
+
+// Enhanced Model Loading
+async function loadAllModels() {
+    try {
+        const services = ['image-generation', 'text-generation', 'chat'];
+        const allModels = [];
+        
+        for (const service of services) {
+            const result = await getAvailableModels(service);
+            if (result.success && result.models) {
+                allModels.push(...result.models.map(model => ({
+                    ...model,
+                    service
+                })));
+            }
+        }
+        
+        if (allModels.length > 0) {
+            displayModels(allModels);
+            document.getElementById('models-status').textContent = `${allModels.length} models`;
+        }
+    } catch (error) {
+        console.error('Error loading models:', error);
+        document.getElementById('models-status').textContent = 'Error loading';
+    }
+}
+
+function displayModels(models) {
+    const container = document.getElementById('models-list');
+    let html = '';
+    
+    models.forEach(model => {
+        html += `
+            <div class="metric-card">
+                <div class="metric-card-value">${model.name || model.id}</div>
+                <div class="metric-card-label">${model.service || 'Model'}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Auto-load additional data when API key is configured
+if (localStorage.getItem('flux_api_key')) {
+    setTimeout(() => {
+        loadApiKeys();
+        loadPricingRates();
+        loadContainerInfo();
+        loadFineTuningJobs();
+        loadAllModels();
+    }, 1000);
+}
+</script>

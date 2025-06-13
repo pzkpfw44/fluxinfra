@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultra Simple Test</title>
+</head>
+<body style="background: #0f0f23; color: white; font-family: Arial; padding: 20px;">
+    <h1>🔧 Ultra Simple Test</h1>
+    
+    <button id="btn1" style="background: #00d4ff; color: black; padding: 15px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        Click Me - Test 1
+    </button>
+    
+    <button onclick="test2()" style="background: #00ff88; color: black; padding: 15px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        Click Me - Test 2 (onclick)
+    </button>
+    
+    <div id="output" style="background: #1a1a2e; padding: 15px; margin: 10px 0; border-radius: 5px; font-family: monospace;">
+        Waiting for clicks...
+    </div>
+
+    <script>
+        console.log('🚀 Script started loading');
+        
+        const output = document.getElementById('output');
+        
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString();
+            output.innerHTML += `<br>[${time}] ${message}`;
+            console.log(`[${time}] ${message}`);
+        }
+        
+        // Test 1: Event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, setting up event listener');
+            addLog('✅ Script loaded and DOM ready');
+            
+            const btn1 = document.getElementById('btn1');
+            if (btn1) {
+                btn1.addEventListener('click', function() {
+                    addLog('🎉 Button 1 clicked! (Event listener works)');
+                    testFetch();
+                });
+                addLog('📌 Event listener attached to Button 1');
+            } else {
+                addLog('❌ Could not find Button 1');
+            }
+        });
+        
+        // Test 2: Inline onclick
+        function test2() {
+            addLog('🎉 Button 2 clicked! (Inline onclick works)');
+            testFetch();
+        }
+        
+        // Test fetch
+        async function testFetch() {
+            addLog('📡 Testing fetch to /api/flux-monitoring/health...');
+            
+            try {
+                const response = await fetch('/api/flux-monitoring/health');
+                addLog(`📊 Response status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addLog(`✅ SUCCESS! Server uptime: ${data.uptime} seconds`);
+                } else {
+                    addLog(`❌ Request failed with status: ${response.status}`);
+                }
+            } catch (error) {
+                addLog(`💥 Fetch error: ${error.message}`);
+            }
+        }
+        
+        addLog('🚀 Script finished loading');
+        console.log('🚀 Script finished loading');
+    </script>
+</body>
+</html>

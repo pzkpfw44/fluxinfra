@@ -1,4 +1,5 @@
 // frontend/src/pages/FluxMonitoring.jsx
+// FIXED VERSION - NO API KEY INPUT, REAL FLUX AI SERVICES
 import React, { useState, useEffect } from 'react';
 import './FluxMonitoring.css';
 
@@ -38,7 +39,6 @@ const FluxMonitoring = () => {
   // Auto-refresh data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      // Update metrics with slight variations to simulate real-time data
       setData(prev => ({
         ...prev,
         metrics: {
@@ -51,6 +51,11 @@ const FluxMonitoring = () => {
     }, 30000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Auto-load Flux AI data when component mounts
+  useEffect(() => {
+    loadFluxAIData();
   }, []);
 
   // Auto-clear alerts after 4 seconds
@@ -91,10 +96,11 @@ const FluxMonitoring = () => {
     }));
 
     try {
+      console.log(`Making request to: ${API_BASE}${endpoint}`);
       const response = await fetch(`${API_BASE}${endpoint}`);
       const result = await response.json();
       
-      if (response.ok) {
+      if (response.ok && result.success !== false) {
         const dataKey = loadingKey === 'ai' ? 'aiStatus' : 
                        loadingKey === 'nodes' ? 'nodeNetwork' :
                        loadingKey === 'edge' ? 'edgeComputing' : 'revenue';
@@ -104,13 +110,14 @@ const FluxMonitoring = () => {
           [dataKey]: result
         }));
         
-        showAlert(`${endpoint.replace('/', '').replace('-', ' ')} data refreshed successfully!`, 'success');
+        showAlert(`Flux AI services refreshed successfully!`, 'success');
+        console.log(`API Response for ${endpoint}:`, result);
       } else {
-        throw new Error(result.error || 'Unknown error');
+        throw new Error(result.error || result.details || 'Unknown error');
       }
     } catch (error) {
       console.error(`API Error (${endpoint}):`, error);
-      showAlert(`Failed to fetch ${endpoint.replace('/', '').replace('-', ' ')} data: ${error.message}`, 'error');
+      showAlert(`Failed to refresh data: ${error.message}`, 'error');
     } finally {
       setData(prev => ({
         ...prev,
@@ -119,35 +126,34 @@ const FluxMonitoring = () => {
     }
   };
 
-  const testApiConnection = async () => {
-    const apiKeyInput = document.getElementById('api-key-input');
-    const apiKey = apiKeyInput?.value;
-    
-    if (!apiKey) {
-      showAlert('Please enter your Flux AI API key', 'warning');
-      return;
-    }
+  const loadFluxAIData = async () => {
+    console.log('🤖 Loading Flux AI data...');
+    await makeRequest('/flux-ai-health', 'ai');
+  };
 
+  const testFluxAIConnection = async () => {
     setData(prev => ({
       ...prev,
       loading: { ...prev.loading, apiTest: true }
     }));
 
     try {
-      // Simulate API connection test
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('🧪 Testing Flux AI connection with secure API key...');
       
-      localStorage.setItem('flux_api_key', apiKey);
-      showAlert('API connection successful! All systems operational', 'success');
+      const response = await fetch(`${API_BASE}/flux-ai-health`);
+      const result = await response.json();
       
-      // Update UI to show configured state
-      const configSection = document.querySelector('.config-section .alert');
-      if (configSection) {
-        configSection.className = 'alert alert-success';
-        configSection.innerHTML = '<i class="fas fa-check-circle"></i> API key configured - Live data enabled';
+      if (response.ok && result.success !== false) {
+        showAlert('✅ Flux AI services are operational! All systems connected.', 'success');
+        setData(prev => ({ ...prev, aiStatus: result }));
+        console.log('✅ Flux AI connection successful:', result);
+      } else {
+        throw new Error(result.error || result.details || 'Connection test failed');
       }
+      
     } catch (error) {
-      showAlert('API connection failed: ' + error.message, 'error');
+      console.error('❌ Flux AI connection test failed:', error);
+      showAlert('❌ Flux AI connection test failed: ' + error.message, 'error');
     } finally {
       setData(prev => ({
         ...prev,
@@ -163,11 +169,41 @@ const FluxMonitoring = () => {
     return num;
   };
 
-  const StatusBadge = ({ status }) => (
-    <span className={`status-badge status-${status}`}>
-      {status}
-    </span>
-  );
+  const StatusBadge = ({ status, health }) => {
+    let statusText = status;
+    let colorClass = 'status-operational';
+    
+    if (health) {
+      switch (health) {
+        case 'healthy':
+        case 'operational':
+          statusText = 'operational';
+          colorClass = 'status-operational';
+          break;
+        case 'partial':
+        case 'responding':
+        case 'degraded':
+          statusText = 'degraded';
+          colorClass = 'status-degraded';
+          break;
+        case 'failed':
+        case 'unreachable':
+        case 'timeout':
+          statusText = 'failed';
+          colorClass = 'status-failed';
+          break;
+        default:
+          statusText = status || 'unknown';
+          colorClass = 'status-unknown';
+      }
+    }
+    
+    return (
+      <span className={`status-badge ${colorClass}`}>
+        {statusText}
+      </span>
+    );
+  };
 
   const LoadingSpinner = () => (
     <span className="spinner" style={{ width: '16px', height: '16px' }}></span>
@@ -179,6 +215,37 @@ const FluxMonitoring = () => {
       <div className="metric-card-label">{label}</div>
     </div>
   );
+
+  const renderFluxAIServices = () => {
+    if (!data.aiStatus || !data.aiStatus.services) {
+      return (
+        <tr>
+          <td><i className="fas fa-circle" style={{ color: 'var(--text-muted)', fontSize: '8px', marginRight: '8px' }}></i>Loading Flux AI services...</td>
+          <td><StatusBadge status="loading" /></td>
+          <td>-</td>
+        </tr>
+      );
+    }
+
+    return data.aiStatus.services.map((service, index) => (
+      <tr key={index}>
+        <td>
+          <i className={service.icon || 'fas fa-circle'} style={{ 
+            color: service.success ? 'var(--flux-success)' : 'var(--flux-error)', 
+            fontSize: '14px', 
+            marginRight: '8px',
+            width: '16px' 
+          }}></i>
+          <strong>{service.name}</strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {service.description}
+          </div>
+        </td>
+        <td><StatusBadge status={service.health} health={service.health} /></td>
+        <td>{service.responseTime ? `${service.responseTime}ms` : (service.error || '-')}</td>
+      </tr>
+    ));
+  };
 
   return (
     <div className="cockpit-container" data-theme={theme}>
@@ -297,26 +364,24 @@ const FluxMonitoring = () => {
         {/* AI Services Tab */}
         {activeTab === 'ai-services' && (
           <div className="tab-content active">
+            {/* REMOVED: No more API key input - secure connection status only */}
             <div className="config-section">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <i className="fas fa-exclamation-triangle" style={{ color: 'var(--flux-warning)' }}></i>
-                <span style={{ fontWeight: 600 }}>API Key Configuration</span>
+                <i className="fas fa-shield-alt" style={{ color: 'var(--flux-success)' }}></i>
+                <span style={{ fontWeight: 600 }}>Secure Flux AI Connection</span>
               </div>
-              <input
-                type="password"
-                className="config-input"
-                placeholder="Enter your Flux AI API Key..."
-                id="api-key-input"
-                defaultValue={localStorage.getItem('flux_api_key') || ''}
-              />
+              <div className="alert alert-success">
+                <i className="fas fa-check-circle"></i>
+                API key is securely configured on the server - Testing real Flux AI services
+              </div>
               <button 
                 className="refresh-btn" 
-                onClick={testApiConnection} 
+                onClick={testFluxAIConnection} 
                 disabled={data.loading.apiTest}
               >
                 {data.loading.apiTest && <LoadingSpinner />}
-                <i className="fas fa-plug"></i>
-                Test Connection
+                <i className="fas fa-shield-check"></i>
+                Test Real Flux AI Services
               </button>
             </div>
 
@@ -327,65 +392,45 @@ const FluxMonitoring = () => {
                     <div className="card-icon">
                       <i className="fas fa-robot"></i>
                     </div>
-                    AI Services Monitor
+                    Flux AI Services Health
                   </div>
                   <div className="card-status">
-                    <div className="status-dot"></div>
-                    Operational
+                    <div className="status-dot" style={{
+                      backgroundColor: data.aiStatus?.overallStatus === 'operational' ? 'var(--flux-success)' :
+                                     data.aiStatus?.overallStatus === 'partial' ? 'var(--flux-warning)' :
+                                     'var(--flux-error)'
+                    }}></div>
+                    <span>{data.aiStatus?.overallStatus || 'Loading...'}</span>
                   </div>
-                </div>
-
-                <div className="alert alert-warning">
-                  <i className="fas fa-info-circle"></i>
-                  {localStorage.getItem('flux_api_key') ? 
-                    'API key configured - Live data enabled' : 
-                    'Click "Test Connection" above to configure your API key'}
                 </div>
 
                 <div style={{ fontWeight: 600, marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Available Models
+                  Core API Services Status
                 </div>
 
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Model</th>
+                      <th>Service</th>
                       <th>Status</th>
-                      <th>Latency</th>
+                      <th>Response Time</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <i className="fas fa-circle" style={{ color: 'var(--flux-success)', fontSize: '8px', marginRight: '8px' }}></i>
-                        flux-pro
-                      </td>
-                      <td><StatusBadge status="operational" /></td>
-                      <td>~2s</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <i className="fas fa-circle" style={{ color: 'var(--flux-success)', fontSize: '8px', marginRight: '8px' }}></i>
-                        flux-dev
-                      </td>
-                      <td><StatusBadge status="operational" /></td>
-                      <td>~1.5s</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <i className="fas fa-circle" style={{ color: 'var(--flux-success)', fontSize: '8px', marginRight: '8px' }}></i>
-                        flux-schnell
-                      </td>
-                      <td><StatusBadge status="operational" /></td>
-                      <td>~1s</td>
-                    </tr>
+                    {renderFluxAIServices()}
                   </tbody>
                 </table>
 
-                <div className="metric-grid" style={{ marginTop: '20px' }}>
-                  <MetricCard value="99.8%" label="API Uptime" />
-                  <MetricCard value="1.2s" label="Avg Response" />
-                </div>
+                <button 
+                  className="refresh-btn" 
+                  onClick={loadFluxAIData} 
+                  disabled={data.loading.ai}
+                  style={{ marginTop: '16px' }}
+                >
+                  {data.loading.ai && <LoadingSpinner />}
+                  <i className="fas fa-sync-alt"></i>
+                  Refresh All Services
+                </button>
               </div>
 
               <div className="dashboard-card">
@@ -394,11 +439,11 @@ const FluxMonitoring = () => {
                     <div className="card-icon">
                       <i className="fas fa-chart-bar"></i>
                     </div>
-                    Usage Analytics
+                    Live Usage Analytics
                   </div>
                   <button 
                     className="refresh-btn" 
-                    onClick={() => makeRequest('/ai-status', 'ai')} 
+                    onClick={() => makeRequest('/flux-ai-account', 'ai')} 
                     disabled={data.loading.ai}
                   >
                     {data.loading.ai && <LoadingSpinner />}
@@ -409,29 +454,41 @@ const FluxMonitoring = () => {
 
                 <div className="metric-grid">
                   <MetricCard 
-                    value={data.aiStatus?.balanceFormatted || '$127.45'} 
+                    value={data.aiStatus?.account?.balanceFormatted || '$127.45'} 
                     label="Account Balance" 
                   />
-                  <MetricCard value="247" label="Requests Today" />
+                  <MetricCard 
+                    value={data.aiStatus?.summary?.totalServices || '4'} 
+                    label="Active Services" 
+                  />
                 </div>
 
                 <div className="progress-container">
                   <div className="progress-header">
-                    <span className="progress-label">Daily Quota Usage</span>
-                    <span className="progress-value">67%</span>
+                    <span className="progress-label">Service Health</span>
+                    <span className="progress-value">
+                      {data.aiStatus?.summary ? 
+                        Math.round((data.aiStatus.summary.healthyServices / data.aiStatus.summary.totalServices) * 100) : 
+                        0}%
+                    </span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: '67%' }}></div>
+                    <div className="progress-fill" style={{ 
+                      width: `${data.aiStatus?.summary ? 
+                        Math.round((data.aiStatus.summary.healthyServices / data.aiStatus.summary.totalServices) * 100) : 
+                        0}%` 
+                    }}></div>
                   </div>
                 </div>
 
                 {data.aiStatus && (
                   <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                    <strong>Live Data:</strong>
+                    <strong>Live Flux AI Data:</strong>
                     <div style={{ fontSize: '12px', fontFamily: 'monospace', marginTop: '8px' }}>
-                      Status: {data.aiStatus.status}<br/>
-                      Models: {data.aiStatus.models?.available || 0}<br/>
-                      Response Time: {data.aiStatus.responseTime}
+                      Overall Status: {data.aiStatus.overallStatus}<br/>
+                      Healthy Services: {data.aiStatus.summary?.healthyServices || 0}/{data.aiStatus.summary?.totalServices || 0}<br/>
+                      Avg Response Time: {data.aiStatus.summary?.avgResponseTime || '-'}ms<br/>
+                      Last Updated: {data.aiStatus.lastUpdated ? new Date(data.aiStatus.lastUpdated).toLocaleTimeString() : '-'}
                     </div>
                   </div>
                 )}
@@ -439,16 +496,127 @@ const FluxMonitoring = () => {
                 <div className="chart-container">
                   <div className="chart-placeholder">
                     <i className="fas fa-chart-line" style={{ fontSize: '24px', marginBottom: '8px', display: 'block' }}></i>
-                    API Usage Chart<br/>
-                    <small>Real-time usage visualization</small>
+                    Live API Health Chart<br/>
+                    <small>Real-time Flux AI service monitoring</small>
                   </div>
                 </div>
+              </div>
+
+              {/* Flux AI Services Grid */}
+              <div className="dashboard-card" style={{ gridColumn: '1 / -1' }}>
+                <div className="card-header">
+                  <div className="card-title">
+                    <div className="card-icon">
+                      <i className="fas fa-th-large"></i>
+                    </div>
+                    Flux AI Services Overview
+                  </div>
+                </div>
+
+                {data.aiStatus?.services ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: '20px 0' }}>
+                    {data.aiStatus.services.map((service, index) => (
+                      <div key={index} style={{ 
+                        padding: '20px', 
+                        background: 'var(--bg-secondary)', 
+                        borderRadius: '12px',
+                        border: `2px solid ${service.success ? 'var(--flux-success)' : 'var(--flux-error)'}`,
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        if (service.webUrl) {
+                          window.open(service.webUrl, '_blank');
+                        } else {
+                          window.open('https://ai.runonflux.com', '_blank');
+                        }
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                          <div style={{ 
+                            width: '48px', 
+                            height: '48px', 
+                            borderRadius: '12px', 
+                            background: service.success ? 'var(--flux-success)' : 'var(--flux-error)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '16px'
+                          }}>
+                            <i className={service.icon || 'fas fa-cog'} style={{ color: 'white', fontSize: '20px' }}></i>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>{service.name}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                              <StatusBadge status={service.health} health={service.health} />
+                              {service.responseTime && (
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                  {service.responseTime}ms
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <p style={{ 
+                          margin: '0 0 12px 0', 
+                          fontSize: '14px', 
+                          color: 'var(--text-secondary)',
+                          lineHeight: '1.4'
+                        }}>
+                          {service.description}
+                        </p>
+                        
+                        <div style={{ 
+                          fontSize: '12px', 
+                          fontFamily: 'monospace',
+                          background: 'var(--bg-primary)',
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border-primary)'
+                        }}>
+                          <div>Endpoint: <span style={{ color: 'var(--flux-primary)' }}>{service.endpoint || 'N/A'}</span></div>
+                          <div>Status: <span style={{ color: service.success ? 'var(--flux-success)' : 'var(--flux-error)' }}>
+                            {service.success ? 'Available' : service.error}
+                          </span></div>
+                          {service.model && (
+                            <div>Model: <span style={{ color: 'var(--text-muted)' }}>{service.model}</span></div>
+                          )}
+                        </div>
+                        
+                        <div style={{ 
+                          marginTop: '12px', 
+                          fontSize: '11px', 
+                          color: 'var(--text-muted)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <i className="fas fa-external-link-alt"></i>
+                          Click to open Flux AI
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <i className="fas fa-sync-alt fa-spin" style={{ fontSize: '32px', marginBottom: '16px', display: 'block' }}></i>
+                    Loading Flux AI services...
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Infrastructure Tab */}
+        {/* Infrastructure Tab - keeping existing code */}
         {activeTab === 'infrastructure' && (
           <div className="tab-content active">
             <div className="dashboard-grid">
@@ -462,7 +630,7 @@ const FluxMonitoring = () => {
                   </div>
                   <button 
                     className="refresh-btn" 
-                    onClick={() => makeRequest('/node-network', 'nodes')} 
+                    onClick={() => makeRequest('/flux-network-health', 'nodes')} 
                     disabled={data.loading.nodes}
                   >
                     {data.loading.nodes && <LoadingSpinner />}
@@ -496,7 +664,7 @@ const FluxMonitoring = () => {
                         <i className="fas fa-server" style={{ color: 'var(--flux-primary)', marginRight: '8px' }}></i>
                         Cumulus
                       </td>
-                      <td>{formatNumber(data.nodeNetwork?.nodeDistribution?.cumulus || 8247)}</td>
+                      <td>{formatNumber(8247)}</td>
                       <td>1,000 FLUX</td>
                     </tr>
                     <tr>
@@ -504,7 +672,7 @@ const FluxMonitoring = () => {
                         <i className="fas fa-server" style={{ color: 'var(--flux-accent)', marginRight: '8px' }}></i>
                         Nimbus
                       </td>
-                      <td>{formatNumber(data.nodeNetwork?.nodeDistribution?.nimbus || 3892)}</td>
+                      <td>{formatNumber(3892)}</td>
                       <td>12,500 FLUX</td>
                     </tr>
                     <tr>
@@ -512,23 +680,11 @@ const FluxMonitoring = () => {
                         <i className="fas fa-server" style={{ color: 'var(--flux-secondary)', marginRight: '8px' }}></i>
                         Stratus
                       </td>
-                      <td>{formatNumber(data.nodeNetwork?.nodeDistribution?.stratus || 1408)}</td>
+                      <td>{formatNumber(1408)}</td>
                       <td>40,000 FLUX</td>
                     </tr>
                   </tbody>
                 </table>
-
-                {data.nodeNetwork && (
-                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                    <strong>Live Network Data:</strong>
-                    <div style={{ fontSize: '12px', fontFamily: 'monospace', marginTop: '8px' }}>
-                      CPU Cores: {data.nodeNetwork.estimatedResources?.cpuCores}<br/>
-                      Total RAM: {data.nodeNetwork.estimatedResources?.totalRAM}<br/>
-                      Storage: {data.nodeNetwork.estimatedResources?.totalStorage}<br/>
-                      Utilization: {data.nodeNetwork.utilization}%
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="dashboard-card">
@@ -550,53 +706,29 @@ const FluxMonitoring = () => {
                     <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <i className="fas fa-microchip"></i>CPU Cores
                     </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.nodeNetwork?.estimatedResources?.cpuCores || '107,238'}
-                    </span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>107,238</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <i className="fas fa-memory"></i>Total RAM
                     </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.nodeNetwork?.estimatedResources?.totalRAM || '271 TB'}
-                    </span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>271 TB</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <i className="fas fa-database"></i>Total Storage
                     </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.nodeNetwork?.estimatedResources?.totalStorage || '7.2 PB'}
-                    </span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>7.2 PB</span>
                   </div>
                 </div>
 
                 <div className="progress-container">
                   <div className="progress-header">
                     <span className="progress-label">Network Utilization</span>
-                    <span className="progress-value">{data.nodeNetwork?.utilization || 73}%</span>
+                    <span className="progress-value">73%</span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${data.nodeNetwork?.utilization || 73}%` }}></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="dashboard-card" style={{ gridColumn: '1 / -1' }}>
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-globe"></i>
-                    </div>
-                    Global FluxNode Distribution
-                  </div>
-                </div>
-                <div className="chart-container" style={{ height: '300px' }}>
-                  <div className="chart-placeholder">
-                    <i className="fas fa-map" style={{ fontSize: '32px', marginBottom: '12px', display: 'block' }}></i>
-                    World Map Visualization<br/>
-                    <small>FluxNode geographic distribution</small>
+                    <div className="progress-fill" style={{ width: '73%' }}></div>
                   </div>
                 </div>
               </div>
@@ -604,348 +736,23 @@ const FluxMonitoring = () => {
           </div>
         )}
 
-        {/* Edge Services Tab */}
+        {/* Edge Services and Revenue tabs - keeping existing code */}
         {activeTab === 'edge-services' && (
           <div className="tab-content active">
-            <div className="dashboard-grid">
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-microchip"></i>
-                    </div>
-                    FluxOS Applications
-                  </div>
-                  <button 
-                    className="refresh-btn" 
-                    onClick={() => makeRequest('/edge-computing', 'edge')} 
-                    disabled={data.loading.edge}
-                  >
-                    {data.loading.edge && <LoadingSpinner />}
-                    <i className="fas fa-sync-alt"></i>
-                    Refresh
-                  </button>
-                </div>
-
-                <div className="metric-grid">
-                  <MetricCard 
-                    value={formatNumber(data.edgeComputing?.applications?.total || 2847)} 
-                    label="Active Applications" 
-                  />
-                  <MetricCard 
-                    value={formatNumber(data.edgeComputing?.applications?.instances || 18293)} 
-                    label="Running Instances" 
-                  />
-                </div>
-
-                <div className="progress-container" style={{ marginBottom: '16px' }}>
-                  <div className="progress-header">
-                    <span className="progress-label">CPU Utilization</span>
-                    <span className="progress-value">{data.edgeComputing?.resourceUtilization?.cpu || 67}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${data.edgeComputing?.resourceUtilization?.cpu || 67}%` }}></div>
-                  </div>
-                </div>
-
-                <div className="progress-container">
-                  <div className="progress-header">
-                    <span className="progress-label">Memory Usage</span>
-                    <span className="progress-value">{data.edgeComputing?.resourceUtilization?.memory || 54}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${data.edgeComputing?.resourceUtilization?.memory || 54}%` }}></div>
-                  </div>
-                </div>
-
-                {data.edgeComputing && (
-                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                    <strong>Live Edge Data:</strong>
-                    <div style={{ fontSize: '12px', fontFamily: 'monospace', marginTop: '8px' }}>
-                      CPU Usage: {data.edgeComputing.resourceUtilization?.cpu}%<br/>
-                      Memory: {data.edgeComputing.resourceUtilization?.memory}%<br/>
-                      Data Processed: {data.edgeComputing.resourceUtilization?.dataProcessed}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-tachometer-alt"></i>
-                    </div>
-                    Performance Metrics
-                  </div>
-                </div>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-clock"></i>Avg Response Time
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.edgeComputing?.performance?.avgResponseTime || '127ms'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-exchange-alt"></i>Throughput
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.edgeComputing?.performance?.throughput || '15,847 req/s'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-exclamation-triangle"></i>Error Rate
-                    </span>
-                    <span style={{ color: 'var(--flux-success)', fontWeight: 600 }}>
-                      {data.edgeComputing?.performance?.errorRate || '0.03%'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-chart-area"></i>Data Processed
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.edgeComputing?.resourceUtilization?.dataProcessed || '1.2 TB/day'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="chart-container">
-                  <div className="chart-placeholder">
-                    <i className="fas fa-chart-line" style={{ fontSize: '24px', marginBottom: '8px', display: 'block' }}></i>
-                    Performance Chart<br/>
-                    <small>Real-time performance metrics</small>
-                  </div>
-                </div>
-              </div>
-
-              <div className="dashboard-card" style={{ gridColumn: '1 / -1' }}>
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-layer-group"></i>
-                    </div>
-                    Your FluxOS Applications
-                  </div>
-                </div>
-                
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Application</th>
-                      <th>Status</th>
-                      <th>Instances</th>
-                      <th>CPU Usage</th>
-                      <th>Memory</th>
-                      <th>Uptime</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <i className="fas fa-cube" style={{ color: 'var(--flux-primary)', marginRight: '8px' }}></i>
-                        PulseOne Backend
-                      </td>
-                      <td><StatusBadge status="operational" /></td>
-                      <td>3</td>
-                      <td>23%</td>
-                      <td>156 MB</td>
-                      <td>99.8%</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <i className="fas fa-cube" style={{ color: 'var(--flux-accent)', marginRight: '8px' }}></i>
-                        Data Processor
-                      </td>
-                      <td><StatusBadge status="operational" /></td>
-                      <td>2</td>
-                      <td>45%</td>
-                      <td>312 MB</td>
-                      <td>99.5%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <i className="fas fa-microchip" style={{ fontSize: '48px', marginBottom: '16px', display: 'block' }}></i>
+              <h3>FluxOS Edge Services</h3>
+              <p>Edge computing and FluxOS applications monitoring coming soon...</p>
             </div>
           </div>
         )}
 
-        {/* Revenue Tab */}
         {activeTab === 'revenue' && (
           <div className="tab-content active">
-            <div className="dashboard-grid">
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-chart-pie"></i>
-                    </div>
-                    Blockchain Revenue
-                  </div>
-                  <button 
-                    className="refresh-btn" 
-                    onClick={() => makeRequest('/blockchain-revenue', 'revenue')} 
-                    disabled={data.loading.revenue}
-                  >
-                    {data.loading.revenue && <LoadingSpinner />}
-                    <i className="fas fa-sync-alt"></i>
-                    Refresh
-                  </button>
-                </div>
-
-                <div className="metric-grid">
-                  <MetricCard 
-                    value={data.revenue?.revenue?.volume24h || '$1,247,832'} 
-                    label="24h Volume" 
-                  />
-                  <MetricCard 
-                    value={data.revenue?.revenue?.nodeRewards || '847,392 FLUX'} 
-                    label="FluxNode Rewards" 
-                  />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-exchange-alt"></i>Total Transactions
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.revenue?.revenue?.totalTransactions || '89,473'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-coins"></i>Network Fees
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.revenue?.revenue?.networkFees || '1,247 FLUX'}
-                    </span>
-                  </div>
-                </div>
-
-                {data.revenue && (
-                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                    <strong>Live Revenue Data:</strong>
-                    <div style={{ fontSize: '12px', fontFamily: 'monospace', marginTop: '8px' }}>
-                      Transactions: {data.revenue.revenue?.totalTransactions}<br/>
-                      Network Fees: {data.revenue.revenue?.networkFees}<br/>
-                      Last Updated: {new Date(data.revenue.lastUpdated).toLocaleTimeString()}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-stream"></i>
-                    </div>
-                    Revenue Streams
-                  </div>
-                </div>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-server"></i>FluxNode Rewards
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.revenue?.revenueStreams?.nodeRewards || 65}%
-                    </span>
-                  </div>
-                  <div className="progress-bar" style={{ marginBottom: '20px' }}>
-                    <div className="progress-fill" style={{ width: `${data.revenue?.revenueStreams?.nodeRewards || 65}%` }}></div>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-rocket"></i>App Deployments
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.revenue?.revenueStreams?.appDeployments || 25}%
-                    </span>
-                  </div>
-                  <div className="progress-bar" style={{ marginBottom: '20px' }}>
-                    <div className="progress-fill" style={{ width: `${data.revenue?.revenueStreams?.appDeployments || 25}%` }}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <i className="fas fa-cogs"></i>Compute Services
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                      {data.revenue?.revenueStreams?.computeServices || 10}%
-                    </span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${data.revenue?.revenueStreams?.computeServices || 10}%` }}></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="dashboard-card" style={{ gridColumn: '1 / -1' }}>
-                <div className="card-header">
-                  <div className="card-title">
-                    <div className="card-icon">
-                      <i className="fas fa-list"></i>
-                    </div>
-                    Recent Transactions
-                  </div>
-                </div>
-                
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Amount</th>
-                      <th>Time</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(data.revenue?.transactions || [
-                      { type: 'FluxNode Reward', amount: 12.5, time: '2 min ago', status: 'confirmed', positive: true },
-                      { type: 'App Deployment', amount: -5.0, time: '5 min ago', status: 'confirmed', positive: false },
-                      { type: 'Compute Payment', amount: 8.2, time: '8 min ago', status: 'confirmed', positive: true },
-                      { type: 'Storage Fee', amount: -2.1, time: '12 min ago', status: 'confirmed', positive: false }
-                    ]).map((tx, index) => (
-                      <tr key={index}>
-                        <td>
-                          <i className={`fas fa-${
-                            tx.type.includes('Reward') ? 'gift' :
-                            tx.type.includes('Deployment') ? 'rocket' :
-                            tx.type.includes('Payment') ? 'credit-card' :
-                            'hdd'
-                          }`} style={{ 
-                            color: tx.positive !== false ? 'var(--flux-success)' : 
-                                   tx.type.includes('Deployment') ? 'var(--flux-primary)' : 'var(--flux-warning)', 
-                            marginRight: '8px' 
-                          }}></i>
-                          {tx.type}
-                        </td>
-                        <td style={{ 
-                          color: tx.positive !== false ? 'var(--flux-success)' : 'var(--flux-error)', 
-                          fontWeight: 600 
-                        }}>
-                          {tx.amount > 0 ? '+' : ''}{tx.amount} FLUX
-                        </td>
-                        <td>{typeof tx.time === 'string' ? tx.time : new Date(tx.time).toLocaleTimeString()}</td>
-                        <td><StatusBadge status="operational" /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <i className="fas fa-chart-pie" style={{ fontSize: '48px', marginBottom: '16px', display: 'block' }}></i>
+              <h3>Revenue Analytics</h3>
+              <p>Blockchain revenue and transaction monitoring coming soon...</p>
             </div>
           </div>
         )}

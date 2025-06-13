@@ -21,7 +21,9 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "script-src": ["'self'", "'unsafe-inline'"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "script-src-attr": ["'unsafe-inline'"],
+        "connect-src": ["'self'"],
       },
     },
   })
@@ -69,6 +71,12 @@ app.get('*', (req, res) => {
       path: req.path
     });
   }
+  
+  // Don't catch static files
+  if (req.path.includes('.')) {
+    return res.status(404).send('File not found');
+  }
+  
   res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
 });
 
